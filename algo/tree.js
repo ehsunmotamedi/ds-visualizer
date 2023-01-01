@@ -1,159 +1,256 @@
-class Tree {
-    constructor(p5) {
-        this.root = null;
-        this.p5 = p5;
+const Node = function (item) {
+    this.item = item;
+    this.height = 1;
+    this.left = null;
+    this.right = null;
+}
+
+//AVL Tree
+const Tree = function () {
+    let root = null;
+
+    //return height of the node
+    this.height = (N) => {
+        if (N === null) {
+            return 0;
+        }
+
+        return N.height;
     }
-    addNode(val) {
-        let node = new Node(val);
-        if (this.root == null) {
-            this.root = node;
+
+    //right rotate
+    this.rightRotate = (y) => {
+        let x = y.left;
+        let T2 = x.right;
+        x.right = y;
+        y.left = T2;
+        y.height = Math.max(this.height(y.left), this.height(y.right)) + 1;
+        x.height = Math.max(this.height(x.left), this.height(x.right)) + 1;
+        return x;
+    }
+
+    //left rotate
+    this.leftRotate = (x) => {
+        let y = x.right;
+        let T2 = y.left;
+        y.left = x;
+        x.right = T2;
+        x.height = Math.max(this.height(x.left), this.height(x.right)) + 1;
+        y.height = Math.max(this.height(y.left), this.height(y.right)) + 1;
+        return y;
+    }
+
+    // get balance factor of a node
+    this.getBalanceFactor = (N) => {
+        if (N == null) {
+            return 0;
+        }
+
+        return this.height(N.left) - this.height(N.right);
+    }
+
+
+    // helper function to insert a node
+    const insertNodeHelper = (node, item) => {
+
+        // find the position and insert the node
+        if (node === null) {
+            return (new Node(item));
+        }
+
+        if (item < node.item) {
+            node.left = insertNodeHelper(node.left, item);
+        } else if (item > node.item) {
+            node.right = insertNodeHelper(node.right, item);
         } else {
-            this.root.addNode(node);
-        }
-    }
-    remove(data) {
-
-        this.root = this.removeNode(this.root, data);
-    }
-
-
-    removeNode(node, key) {
-
-        if (node === null) return null;
-
-        else if (key < node.value) {
-            node.left = this.removeNode(node.left, key);
             return node;
         }
 
-        else if (key > node.value) {
-            node.right = this.removeNode(node.right, key);
-            return node;
-        }
+        // update the balance factor of each node
+        // and, balance the tree
+        node.height = 1 + Math.max(this.height(node.left), this.height(node.right));
 
-        else {
+        let balanceFactor = this.getBalanceFactor(node);
 
-            if (node.left === null && node.right === null) {
-                node = null;
-                return node;
+        if (balanceFactor > 1) {
+            if (item < node.left.item) {
+                return this.rightRotate(node);
+            } else if (item > node.left.item) {
+                node.left = this.leftRotate(node.left);
+                return this.rightRotate(node);
             }
+        }
 
-
-            if (node.left === null) {
-                node = node.right;
-                return node;
-            } else if (node.right === null) {
-                node = node.left;
-                return node;
+        if (balanceFactor < -1) {
+            if (item > node.right.item) {
+                return this.leftRotate(node);
+            } else if (item < node.right.item) {
+                node.right = this.rightRotate(node.right);
+                return this.leftRotate(node);
             }
-
-            var aux = this.findMinNode(node.right);
-            node.value = aux.value;
-
-            node.right = this.removeNode(node.right, aux.value);
-            return node;
         }
-    }
-    findMinNode(node) {
-        if (node.left === null) return node;
-        else return this.findMinNode(node.left);
-    }
-    traverse(type) {
-        if (type == "inorder") this.root.inOrder();
-    }
-    display(xSpace, ySpace) {
-        this.p5.translate(xSpace / 2, ySpace);
-        xSpace /= 2;
-        if (this.root) this.root.show(this.p5, xSpace, ySpace);
+
+        return node;
     }
 
-    depth(node = this.root) {
-        if (node === null) return 0;
+    // insert a node
+    this.insert = (item) => {
+        // console.log(root);
+        root = insertNodeHelper(root, item);
+    }
 
-        return Math.max(this.depth(node.left), this.depth(node.right)) + 1;
+    //get node with minimum value
+    this.nodeWithMimumValue = (node) => {
+        let current = node;
+        while (current.left !== null) {
+            current = current.left;
+        }
+        return current;
     }
-}
 
-class Node {
-    constructor(val) {
-        this.left = null;
-        this.right = null;
-        this.value = val;
-    }
-    inOrder(arr) {
-        if (this.left) this.left.inOrder(arr);
-        arr.push(this.value);
-        if (this.right) this.right.inOrder(arr);
-    }
-    unColor() {
-        if (this.left) this.left.unColor();
-        this.green = null;
-        if (this.right) this.right.unColor();
-    }
-    search(val) {
-        if (this.value == val) {
-            return this;
+    // delete helper
+    const deleteNodeHelper = (root, item) => {
+
+        // find the node to be deleted and remove it
+        if (root == null) {
+            return root;
         }
-        if (this.left && val < this.value) {
-            return this.left.search(val);
-        }
-        if (this.right && val > this.value) {
-            return this.right.search(val);
-        }
-        return false;
-    }
-    addNode(node) {
-        if (node.value < this.value) {
-            // go to left
-            if (this.left == null) {
-                this.left = node;
+        if (item < root.item) {
+            root.left = deleteNodeHelper(root.left, item);
+        } else if (item > root.item) {
+            root.right = deleteNodeHelper(root.right, item);
+        } else {
+            if ((root.left === null) || (root.right === null)) {
+                let temp = null;
+                if (temp == root.left) {
+                    temp = root.right;
+                } else {
+                    temp = root.left;
+                }
+
+                if (temp == null) {
+                    temp = root;
+                    root = null;
+                } else {
+                    root = temp;
+                }
             } else {
-                this.left.addNode(node);
+                let temp = this.nodeWithMimumValue(root.right);
+                root.item = temp.item;
+                root.right = deleteNodeHelper(root.right, temp.item);
             }
-        } else if (node.value > this.value) {
-            // go to right
-            if (this.right == null) {
-                this.right = node;
+        }
+        if (root == null) {
+            return root;
+        }
+
+        // Update the balance factor of each node and balance the tree
+        root.height = Math.max(this.height(root.left), this.height(root.right)) + 1;
+
+        let balanceFactor = this.getBalanceFactor(root);
+        if (balanceFactor > 1) {
+            if (this.getBalanceFactor(root.left) >= 0) {
+                return this.rightRotate(root);
             } else {
-                this.right.addNode(node);
+                root.left = this.leftRotate(root.left);
+                return this.rightRotate(root);
             }
         }
-    }
-    show(p5, xSpace, ySpace) {
-        p5.fill(200);
-        p5.strokeWeight(2);
-        p5.stroke(255);
-        if (this.green) fill("lightgreen");
-        p5.ellipse(0, 0, 30);
-        p5.noStroke();
-        p5.fill(0);
-        p5.text(this.value, 0, 0);
-        if (this.left) {
-            p5.push();
-            p5.stroke(255);
-            p5.line(-8, 13, -xSpace / 2 + 5, ySpace - 15);
-            p5.translate(-xSpace / 2, ySpace);
-            xSpace /= 2;
-            this.left.show(p5, xSpace, ySpace);
-            xSpace *= 2;
-            p5.pop();
+        if (balanceFactor < -1) {
+            if (this.getBalanceFactor(root.right) <= 0) {
+                return this.leftRotate(root);
+            } else {
+                root.right = this.rightRotate(root.right);
+                return this.leftRotate(root);
+            }
         }
-        if (this.right) {
-            p5.push();
-            p5.stroke(255);
-            p5.line(8, 13, xSpace / 2 - 5, ySpace - 15);
-            p5.translate(xSpace / 2, ySpace);
-            xSpace /= 2;
-            this.right.show(p5, xSpace, ySpace);
-            xSpace *= 2;
-            p5.pop();
+        return root;
+    }
+
+    //delete a node
+    this.deleteNode = (item) => {
+        root = deleteNodeHelper(root, item);
+    }
+
+    // print the tree in pre - order
+    this.preOrder = () => {
+        preOrderHelper(root);
+    }
+
+    const preOrderHelper = (node) => {
+        if (node) {
+            console.log(node.item);
+            preOrderHelper(node.left);
+            preOrderHelper(node.right);
         }
     }
-}
+
+    //display functuion accepting p5
+    this.display = (p5, width, height) => {
+        displayHelper(p5, width, height);
+    }
+
+    //draw function as tree with p5 with lines and circles
+    const displayHelper = (p5, canvasWidth, canvasHeight) => {
+        let x = canvasWidth / 2;
+        let y = 50;
+        let level = 1;
+        let levelHeight = 100;
+        let radius = 20;
+
+        let queue = [];
 
 
-//export treee ad node
-module.exports = {
-    Tree,
-    Node
+        let queueLevel = [];
+        let queueX = [];
+        let queueY = [];
+        queue.push(root);
+        queueLevel.push(level);
+        queueX.push(x);
+        queueY.push(y);
+        while (queue.length > 0) {
+            let node = queue.shift();
+            let nodeLevel = queueLevel.shift();
+            let nodeX = queueX.shift();
+            let nodeY = queueY.shift();
+            if (node.left) {
+                p5.stroke(244);
+                p5.line(nodeX, nodeY, nodeX - (canvasWidth / Math.pow(2, nodeLevel + 1)), nodeY + levelHeight);
+            }
+            if (node.right) {
+                p5.stroke(244);
+                p5.line(nodeX, nodeY, nodeX + (canvasWidth / Math.pow(2, nodeLevel + 1)), nodeY + levelHeight);
+            }
+            if (node.left) {
+                queue.push(node.left);
+                queueLevel.push(nodeLevel + 1);
+                queueX.push(nodeX - (canvasWidth / Math.pow(2, nodeLevel + 1)));
+                queueY.push(nodeY + levelHeight);
+            }
+            if (node.right) {
+                queue.push(node.right);
+                queueLevel.push(nodeLevel + 1);
+                queueX.push(nodeX + (canvasWidth / Math.pow(2, nodeLevel + 1)));
+                queueY.push(nodeY + levelHeight);
+            }
+            p5.stroke(0);
+            p5.fill(244);
+            p5.circle(nodeX, nodeY, radius * 2);
+            p5.fill(0);
+            p5.textAlign(p5.CENTER, p5.CENTER);
+            p5.text(node.item, nodeX, nodeY);
+
+        }
+
+    }
+
+
+
+
+
+
+
+
 }
+
+module.exports = { Tree };

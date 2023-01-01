@@ -22,6 +22,7 @@
 <script>
 //https://editor.p5js.org/funplanet/sketches/_uwaomKtM
 
+
 import { Tree } from "../../algo/tree.js";
 
 export default {
@@ -60,7 +61,7 @@ export default {
       let xSpace, ySpace;
       let sorted;
       let canvas, button;
-      let tree = new Tree(p5);
+      let tree = new Tree();
       const width = 900
       const height = 650
       // NOTE: Set up is here
@@ -96,13 +97,16 @@ export default {
         remove.position(50, 405);
         button.mousePressed(() => {
           let val = parseInt(box.value());
-          if (val) tree.addNode(val);
+          if (val) tree.insert(val);
           box.value(null);
         })
         remove.mousePressed(() => {
-          let val = parseInt(box.value());
-          if (val) tree.remove(val);
-          box.value(null);
+          // let val = parseInt(box.value());
+          // if (val) tree.remove(val);
+          // box.value(null);
+          tree.preOrder();
+
+
         })
 
 
@@ -111,28 +115,30 @@ export default {
         random.addClass("btn btn-sm btn-primary")
         random.position(50, 445);
         random.mousePressed(() => {
-
           let val = Math.floor(Math.random() * 100) + 1;
           if (val) {
-            tree.addNode(val);
+            tree.insert(val);
           } else {
             p5.fill(255, 0, 0);
             p5.text(val + "already exists!", 50, 50);
           }
           box.value(null);
         })
-        tree.addNode(10)
-        tree.addNode(5)
-        tree.addNode(15)
 
+        tree.insert(13);
+        tree.insert(9);
+        tree.insert(19);
 
       };
       // NOTE: Draw is here
       p5.draw = _ => {
         p5.background(51);
         xSpace = width;
-        ySpace = height / (tree.depth() + 1);
-        tree.display(xSpace, ySpace);
+        ySpace = height;
+
+        //delay 1 second in JS
+        // tree.preOrder();
+        tree.display(p5, xSpace, ySpace);
 
       };
     };
